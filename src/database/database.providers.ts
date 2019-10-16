@@ -4,6 +4,6 @@ export const databaseProviders = [
   {
     provide: 'DATABASE_CONNECTION',
     useFactory: async (): Promise<typeof mongoose> =>
-      await mongoose.connect('mongodb://localhost:27017/testdb'),
+      await mongoose.connect(process.env.DB_URL + process.env.DB_NAME),
   },
 ];
