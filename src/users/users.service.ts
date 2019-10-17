@@ -4,6 +4,7 @@ import { User } from '../interfaces/user.interface';
 import { Model } from 'mongoose';
 import { CreateUserDto} from '../dto/create-user.dto';
 
+
 @Injectable()
 export class UsersService {
   constructor(@Inject('USER_MODEL') private readonly userModel: Model<User>) {}
@@ -14,5 +15,12 @@ export class UsersService {
   }
   async findAll(): Promise<User> {
     return await this.userModel.find().exec();
+  }
+  /////////////////////////////////////////////////////
+
+  async  findOne(username: string): Promise<User | undefined> {
+    // const query = this.userModel.where({username});
+    // tslint:disable-next-line:only-arrow-functions
+    return await this.userModel.findOne({username});
   }
 }
