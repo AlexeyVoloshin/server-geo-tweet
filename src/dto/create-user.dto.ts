@@ -5,4 +5,5 @@ export class CreateUserDto {
   readonly username: string;
   @IsNotEmpty()
   readonly password: string;
+  readonly admin: boolean;
 }
