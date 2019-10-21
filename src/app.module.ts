@@ -2,7 +2,7 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
-import { JwtMiddleware } from './helpers/jwt.middleware';
+import { CheckUserIfAdmin } from './helpers/check.user.if.admin';
 // tslint:disable-next-line:no-var-requires
 require('dotenv').config();
 
@@ -13,7 +13,7 @@ require('dotenv').config();
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): any {
     consumer
-      .apply(JwtMiddleware)
+      .apply(CheckUserIfAdmin)
       .forRoutes({path: 'users', method: RequestMethod.GET});
   }
 }

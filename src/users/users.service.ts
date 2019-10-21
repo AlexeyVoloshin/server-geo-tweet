@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { User } from '../interfaces/user.interface';
 import { Model } from 'mongoose';
 import { CreateUserDto } from '../dto/create-user.dto';
+import { json } from 'express';
 
 @Injectable()
 export class UsersService {
@@ -21,5 +22,9 @@ export class UsersService {
 
   async findOne(username: string): Promise<User | undefined> {
     return await this.userModel.findOne({ username });
+  }
+
+  async findUserById(_id: string): Promise<User> {
+    return await this.userModel.findById(_id).exec();
   }
 }
