@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { UsersService } from '../users/users.service';
 // tslint:disable-next-line:no-var-requires
 import * as JWT from 'jwt-decode';
-import DoneCallback = jest.DoneCallback;
+import * as expressJwt from 'express-jwt';
 // import { jwt}
 
 @Injectable()
@@ -11,11 +11,11 @@ export class CheckUserIfAdmin implements NestMiddleware {
   constructor(private usersService: UsersService) {}
  async use(req: Request, res: Response, next: () => void) {
     const user = await this.getUserFromToken(req.headers.authorization);
-    if (!user) {
-      return false;
-    } else {
-      next();
-    }
+    if (user['admin']) {
+        next();
+      } else {
+        return res.status(400).send('Access is denied');
+      }
   }
   async getUserFromToken(authorization) {
       try {
