@@ -3,8 +3,8 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
 import { CheckUserIfAdmin } from './helpers/check.user.if.admin';
-import { AdminService } from './admin/admin.service';
 import { AdminModule } from './admin/admin.module';
+import { AdminController } from './admin/admin.controller';
 // tslint:disable-next-line:no-var-requires
 require('dotenv').config();
 
@@ -19,6 +19,7 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): any {
     consumer
       .apply(CheckUserIfAdmin)
-      .forRoutes({path: 'admin', method: RequestMethod.ALL});
+      .exclude({ path: 'admin/tweets', method: RequestMethod.GET})
+      .forRoutes(AdminController);
   }
 }
