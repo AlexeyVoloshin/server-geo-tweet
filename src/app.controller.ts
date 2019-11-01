@@ -20,4 +20,10 @@ export class AppController {
   getProfile(@Request() req) {
     return req.user;
   }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('get-current-user')
+  getCurrentUser(@Request() req) {
+    return req.user;
+  }
 }

@@ -27,7 +27,7 @@ export class AuthService {
       admin: user._doc.admin,
     };
     return {
-      access_token: this.jwtService.sign(payload),
+      token: this.jwtService.sign(payload),
     };
   }
 }
