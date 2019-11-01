@@ -19,11 +19,11 @@ export class AdminController {
   }
   @Post('/geo')
   async createGeo(@Body() createGeoDto: CreateGeoDto) {
-    await this.adminService.create(createGeoDto);
+    await this.adminService.saveGeo(createGeoDto);
   }
   @Get('/geo')
   async findOneGeo(): Promise<GeoInterface> {
-    return this.adminService.getLast();
+    return this.adminService.getLastGeo();
   }
 
 }
