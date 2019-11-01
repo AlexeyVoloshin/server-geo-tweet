@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import * as Twitter from 'twit';
 import { GeoInterface } from '../interfaces/geo.interface';
 import { User } from '../interfaces/user.interface';
@@ -8,6 +8,8 @@ import { CreateTwitterDto } from '../dto/create-twitter.dto';
 import { map } from 'rxjs/operators';
 import { TwitterInterface } from '../interfaces/twitter.interface';
 import { Observable } from 'rxjs';
+import { ScheduleService } from '../helpers/schedule-service';
+import { InjectSchedule, Schedule } from 'nest-schedule';
 
 @Injectable()
 export class AdminService {
@@ -17,12 +19,14 @@ export class AdminService {
     access_token: '1007140982863876096-NbmEzEiLBweDAjpLGhemP4cQNjmkma',
     access_token_secret: 'C4FhG6BOPdNmywe9FZBOmcrywReDI4lamD5HZsfSR9z7k',
   });
-  geoTwitter: GeoInterface[] = [];
+  geoInterfaces: CreateGeoDto;
   twitters: CreateTwitterDto;
+  twitt: CreateTwitterDto[] = [];
 
   constructor(
     @Inject('GEO_MODEL') private readonly geoModel: Model<GeoInterface>,
     @Inject('TWITTER_MODEL') private readonly twitterModel: Model<TwitterInterface>,
+    @InjectSchedule() private readonly schedule: Schedule,
   ) {
   }
 
@@ -68,7 +72,42 @@ export class AdminService {
     return await this.geoModel.find().sort({ _id: -1 }).limit(1);
   }
 
-  startCron() {
+  onModuleInit(): any {
+    this.schedule.scheduleIntervalJob('my-job', 2000, () => {
+      console.log('executing interval job');
+      this.getNewTweets();
+      return true;
+    });
+  }
 
+  async getNewTweets() {
+    await this.getLastGeo().then(data => {
+      debugger
+      this.geoInterfaces = data[0]['_doc'];
+      // return this.geoInterfaces;
+    }).catch(error => {
+      console.log(error);
+    });
+    const loc = this.geoInterfaces.lat + ',' + this.geoInterfaces.lng + ',' + this.geoInterfaces.rad + 'km';
+    console.log(loc);
+    const search = this.geoInterfaces.search;
+    const params = { q: search, geocode: loc, count: 10 };
+    return await this.client.get('search/tweets', params)
+      .then(timeline => {
+        debugger
+        timeline['data']['statuses'].map(value => {
+          this.twitt.push({
+            text: value.text,
+            name: value.user.name,
+            location: value.user.location,
+            image: value.user.profile_image_url,
+          });
+        });
+        this.saveTwitters(this.twitters);
+        console.log('ok');
+      })
+      .catch(error => {
+        console.log(error);
+      });
   }
 }
