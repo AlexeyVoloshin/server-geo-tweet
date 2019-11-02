@@ -5,16 +5,12 @@ import { AppController } from './app.controller';
 import { CheckUserIfAdmin } from './helpers/check.user.if.admin';
 import { AdminModule } from './admin/admin.module';
 import { AdminController } from './admin/admin.controller';
-import { ScheduleModule } from 'nest-schedule';
 // tslint:disable-next-line:no-var-requires
 require('dotenv').config();
 
 @Module({
   controllers: [AppController],
-  imports: [UsersModule, AuthModule, AdminModule, ScheduleModule.register()],
-  // providers: [
-  //   AdminService,
-  // ],
+  imports: [UsersModule, AuthModule, AdminModule],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): any {

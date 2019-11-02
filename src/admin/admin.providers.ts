@@ -1,5 +1,4 @@
 import { Connection } from 'mongoose';
-// import { UserSchema } from '../schemas/user.schema';
 import { GeoSchema } from '../schemas/geo.schema';
 
 export const geoProviders = [

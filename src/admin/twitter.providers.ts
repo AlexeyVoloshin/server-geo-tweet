@@ -1,5 +1,4 @@
 import { Connection } from 'mongoose';
-// import { UserSchema } from '../schemas/user.schema';
 import { TwitterSchema } from '../schemas/twitter.schema';
 
 export const twitterProviders = [

@@ -3,7 +3,6 @@ import { AdminService } from './admin.service';
 import { GeoInterface } from '../interfaces/geo.interface';
 import { CreateGeoDto } from '../dto/create-geo.dto';
 import { TwitterInterface } from '../interfaces/twitter.interface';
-import { Observable } from 'rxjs';
 import { CreateTwitterDto } from '../dto/create-twitter.dto';
 
 @Controller('admin')

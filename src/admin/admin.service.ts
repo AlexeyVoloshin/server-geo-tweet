@@ -1,14 +1,15 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import * as Twitter from 'twit';
 import { GeoInterface } from '../interfaces/geo.interface';
-import { User } from '../interfaces/user.interface';
+
 import { Model } from 'mongoose';
 import { CreateGeoDto } from '../dto/create-geo.dto';
 import { CreateTwitterDto } from '../dto/create-twitter.dto';
-import { map } from 'rxjs/operators';
+
 import { TwitterInterface } from '../interfaces/twitter.interface';
-import { Observable, pipe } from 'rxjs';
-import { InjectSchedule, Schedule } from 'nest-schedule';
+
+// tslint:disable-next-line:no-var-requires
+const  cron = require('node-cron').CronJob;
 
 @Injectable()
 export class AdminService {
@@ -18,35 +19,34 @@ export class AdminService {
     access_token: '1007140982863876096-NbmEzEiLBweDAjpLGhemP4cQNjmkma',
     access_token_secret: 'C4FhG6BOPdNmywe9FZBOmcrywReDI4lamD5HZsfSR9z7k',
   });
-  geoInterfaces: CreateGeoDto;
+
   twitters: TwitterInterface[] = [];
-  twitt: CreateTwitterDto[] = [];
 
   constructor(
     @Inject('GEO_MODEL') private readonly geoModel: Model<GeoInterface>,
     @Inject('TWITTER_MODEL') private readonly twitterModel: Model<TwitterInterface>,
-    @InjectSchedule() private readonly schedule: Schedule,
   ) {
+     // this.cronJob();
   }
 
-  async get(req, res): Promise<CreateTwitterDto> { // get tweets from twitter
+  async get(req, res?): Promise<CreateTwitterDto> { // get tweets from twitter
     const rad = Math.round(req.body.rad / 1000);
     const loc = req.body.lat + ',' + req.body.lng + ',' + rad + 'km';
     const search = req.body.search;
     const params = { q: search, geocode: loc, count: 10 };
+
     return await this.client.get('search/tweets', params)
-        .then(data => {
-          data['data']['statuses'].map(value => {
-            this.twitters.push( {
-              name: value.user.name,
-              image: value.user.profile_image_url,
-              location: value.user.location,
-              text: value.text,
-            });
-            // this.saveTwitters(this.twitters);
+      .then(data => {
+        data['data']['statuses'].map(value => {
+          this.twitters.push({
+            name: value.user.name,
+            image: value.user.profile_image_url,
+            location: value.user.location,
+            text: value.text,
           });
-          res.send(this.twitters);
-        })
+        });
+        res.send(this.twitters);
+      })
       .catch(error => {
         res.send(error);
       });
@@ -75,42 +75,43 @@ export class AdminService {
     return await this.geoModel.find().sort({ _id: -1 }).limit(1);
   }
 
-  // onModuleInit(): any {
-  //   this.schedule.scheduleIntervalJob('my-job', 2000, () => {
-  //     console.log('executing interval job');
-  //     this.getNewTweets();
-  //     return true;
-  //   });
-  // }
+  async getTweetsForCron(data: CreateGeoDto): Promise<CreateTwitterDto> {
+    const rad = Math.round(data[0]['_doc'].rad / 1000);
+    const loc = data[0]['_doc'].lat + ',' + data[0]['_doc'].lng + ',' + rad + 'km';
+    const search = data[0]['_doc'].search;
+    const params = { q: search, geocode: loc, count: 10 };
+    return await this.client.get('search/tweets', params)
+      .then(tweet => {
+        tweet['data']['statuses'].map(value => {
+          this.twitters.push({
+            name: value.user.name,
+            image: value.user.profile_image_url,
+            location: value.user.location,
+            text: value.text,
+          });
+        });
+        return this.twitters;
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  }
 
-  // async getNewTweets() {
-  //   await this.getLastGeo().then(data => {
-  //     debugger
-  //     this.geoInterfaces = data[0]['_doc'];
-  //     // return this.geoInterfaces;
-  //   }).catch(error => {
-  //     console.log(error);
-  //   });
-  //   const loc = this.geoInterfaces.lat + ',' + this.geoInterfaces.lng + ',' + this.geoInterfaces.rad + 'km';
-  //   console.log(loc);
-  //   const search = this.geoInterfaces.search;
-  //   const params = { q: search, geocode: loc, count: 10 };
-  //   return await this.client.get('search/tweets', params)
-  //     .then(timeline => {
-  //       debugger
-  //       timeline['data']['statuses'].map(value => {
-  //         this.twitt.push({
-  //           text: value.text,
-  //           name: value.user.name,
-  //           location: value.user.location,
-  //           image: value.user.profile_image_url,
-  //         });
-  //       });
-  //       this.saveTwitters(this.twitters);
-  //       console.log('ok');
-  //     })
-  //     .catch(error => {
-  //       console.log(error);
-  //     });
-  // }
+  async saveNewTweets() {
+    const geo = await this.getLastGeo();
+    const newTweets = await this.getTweetsForCron(geo);
+    await this.saveTwitters(newTweets);
+  }
+
+  cronJob() {
+    cron.schedule('* */1 * * * *', async () => {
+      try {
+        console.log('Cron run: save new tweets');
+        await this.saveNewTweets();
+      } catch (error) {
+        console.log('cron run saved new tweets error: ', error);
+        throw  error;
+      }
+    });
+  }
 }
