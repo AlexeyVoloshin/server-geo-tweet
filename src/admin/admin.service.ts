@@ -25,9 +25,7 @@ export class AdminService {
   constructor(
     @Inject('GEO_MODEL') private readonly geoModel: Model<GeoInterface>,
     @Inject('TWITTER_MODEL') private readonly twitterModel: Model<TwitterInterface>,
-  ) {
-     // this.cronJob();
-  }
+  ) {}
 
   async get(req, res?): Promise<CreateTwitterDto> { // get tweets from twitter
     const rad = Math.round(req.body.rad / 1000);
