@@ -4,14 +4,19 @@ import { GeoInterface } from '../interfaces/geo.interface';
 import { CreateGeoDto } from '../dto/create-geo.dto';
 import { TwitterInterface } from '../interfaces/twitter.interface';
 import { Observable } from 'rxjs';
+import { CreateTwitterDto } from '../dto/create-twitter.dto';
 
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {
   }
   @Post('/save')
-  async findAllAndSave(@Req() req: any, @Res() res: any): Promise<TwitterInterface> {
+  async findAllAndSave(@Req() req: any, @Res() res: any): Promise<CreateTwitterDto> {
     return this.adminService.get(req, res);
+  }
+  @Post('/tweets')
+  async addTweets(@Body() createTwitterDto: CreateTwitterDto) {
+    return this.adminService.saveTwitters(createTwitterDto);
   }
   @Get('/tweets')
   async findAll(): Promise<TwitterInterface> {
