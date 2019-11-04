@@ -19,15 +19,13 @@ export class AdminService {
     access_token: '1007140982863876096-NbmEzEiLBweDAjpLGhemP4cQNjmkma',
     access_token_secret: 'C4FhG6BOPdNmywe9FZBOmcrywReDI4lamD5HZsfSR9z7k',
   });
-
-  twitters: TwitterInterface[] = [];
-
   constructor(
     @Inject('GEO_MODEL') private readonly geoModel: Model<GeoInterface>,
     @Inject('TWITTER_MODEL') private readonly twitterModel: Model<TwitterInterface>,
   ) {}
 
   async get(req, res?): Promise<CreateTwitterDto> { // get tweets from twitter
+    const tweets: TwitterInterface[] = [];
     const rad = Math.round(req.body.rad / 1000);
     const loc = req.body.lat + ',' + req.body.lng + ',' + rad + 'km';
     const search = req.body.search;
@@ -36,14 +34,14 @@ export class AdminService {
     return await this.client.get('search/tweets', params)
       .then(data => {
         data['data']['statuses'].map(value => {
-          this.twitters.push({
+          tweets.push({
             name: value.user.name,
             image: value.user.profile_image_url,
             location: value.user.location,
             text: value.text,
           });
         });
-        res.send(this.twitters);
+        res.send(tweets);
       })
       .catch(error => {
         res.send(error);
@@ -76,6 +74,7 @@ export class AdminService {
   }
 
   async getTweetsForCron(data: CreateGeoDto): Promise<CreateTwitterDto> {
+    const tweets: TwitterInterface[] = [];
     const rad = Math.round(data[0]['_doc'].rad / 1000);
     const loc = data[0]['_doc'].lat + ',' + data[0]['_doc'].lng + ',' + rad + 'km';
     const search = data[0]['_doc'].search;
@@ -83,14 +82,14 @@ export class AdminService {
     return await this.client.get('search/tweets', params)
       .then(tweet => {
         tweet['data']['statuses'].map(value => {
-          this.twitters.push({
+          tweets.push({
             name: value.user.name,
             image: value.user.profile_image_url,
             location: value.user.location,
             text: value.text,
           });
         });
-        return this.twitters;
+        return tweets;
       })
       .catch(error => {
         console.log(error);
@@ -104,7 +103,7 @@ export class AdminService {
   }
 
   cronJob() {
-    cron.schedule('*/1 * * * *', async () => {
+    cron.schedule('*/5 * * * *', async () => {
       try {
         console.log('Cron run: save new tweets');
         await this.saveNewTweets();
