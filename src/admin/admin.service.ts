@@ -9,7 +9,7 @@ import { CreateTwitterDto } from '../dto/create-twitter.dto';
 import { TwitterInterface } from '../interfaces/twitter.interface';
 
 // tslint:disable-next-line:no-var-requires
-const  cron = require('node-cron').CronJob;
+const  cron = require('node-cron');
 
 @Injectable()
 export class AdminService {
@@ -66,7 +66,9 @@ export class AdminService {
 
   async saveGeo(createGeo: CreateGeoDto): Promise<GeoInterface> {
     const createGeoDto = new this.geoModel(createGeo);
-    return await createGeoDto.save();
+    const result = await createGeoDto.save();
+    // this.cronJob();
+    return result;
   }
 
   async getLastGeo(): Promise<GeoInterface> {
@@ -102,7 +104,7 @@ export class AdminService {
   }
 
   cronJob() {
-    cron.schedule('* */1 * * * *', async () => {
+    cron.schedule('*/1 * * * *', async () => {
       try {
         console.log('Cron run: save new tweets');
         await this.saveNewTweets();
@@ -111,5 +113,5 @@ export class AdminService {
         throw  error;
       }
     });
-  }
+   }
 }
