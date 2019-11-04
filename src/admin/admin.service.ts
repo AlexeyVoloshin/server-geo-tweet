@@ -30,7 +30,7 @@ export class AdminService {
     const loc = req.body.lat + ',' + req.body.lng + ',' + rad + 'km';
     const search = req.body.search;
     const params = { q: search, geocode: loc, count: 10 };
-
+    try {
     return await this.client.get('search/tweets', params)
       .then(data => {
         data['data']['statuses'].map(value => {
@@ -46,10 +46,17 @@ export class AdminService {
       .catch(error => {
         res.send(error);
       });
+  } catch (err) {
+    console.log('getTweets from twitter error: ', err);
+  }
   }
 
   async getTweets(): Promise<TwitterInterface> { // get tweets from local db
+    try {
     return await this.twitterModel.find({}).sort({ _id: -1 });
+    } catch (err) {
+      console.log('getTweets error: ', err);
+    }
   }
 
   async saveTwitters(createTwitter: CreateTwitterDto): Promise<TwitterInterface> {
@@ -58,19 +65,29 @@ export class AdminService {
       createTwitterDto.collection.insert(createTwitter);
       return await createTwitterDto.save();
     } catch (err) {
-      console.log('saveTweets', err);
+      console.log('saveTweets error: ', err);
     }
   }
 
   async saveGeo(createGeo: CreateGeoDto): Promise<GeoInterface> {
+    try {
     const createGeoDto = new this.geoModel(createGeo);
     const result = await createGeoDto.save();
-    // this.cronJob();
+    if (result) {
+      // this.cronJob();
+    }
     return result;
+    } catch (err) {
+      console.log('saveGeo error: ', err);
+    }
   }
 
   async getLastGeo(): Promise<GeoInterface> {
+    try {
     return await this.geoModel.find().sort({ _id: -1 }).limit(1);
+    } catch (err) {
+      console.log('getLastGeo error: ', err);
+    }
   }
 
   async getTweetsForCron(data: CreateGeoDto): Promise<CreateTwitterDto> {
@@ -79,6 +96,7 @@ export class AdminService {
     const loc = data[0]['_doc'].lat + ',' + data[0]['_doc'].lng + ',' + rad + 'km';
     const search = data[0]['_doc'].search;
     const params = { q: search, geocode: loc, count: 10 };
+    try {
     return await this.client.get('search/tweets', params)
       .then(tweet => {
         tweet['data']['statuses'].map(value => {
@@ -94,6 +112,9 @@ export class AdminService {
       .catch(error => {
         console.log(error);
       });
+    } catch (err) {
+      console.log('getTweets from Twitter', err);
+    }
   }
 
   async saveNewTweets() {
